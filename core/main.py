@@ -100,7 +100,7 @@ class Admin_view(object):
     def school_list(self):
         '''学校列表'''
         for index,school in enumerate(self.schooldata):
-            print('序号：{}\t\t学校名称：{}'.format(index,school))
+            print('序号：{}\t\t学校名称：{}'.format(index + 1,school))
 
     def del_school(self):
         '''删除学校'''
@@ -123,6 +123,9 @@ class Admin_view(object):
         while True:
             if your_choiseschool in self.schooldata:
                 self.school_obj = self.schooldata[your_choiseschool]
+                #schooldata[your_choiseschool]是学校的实例
+                # 并且也是一个变量，指向内存学校的内存空间
+                #self.school_obj = self.schooldata[your_choiseschool]相当于把学校实例当成key，加入个学校-老师字典
                 manage_school_page = '''
 
                                 1:添加讲师
@@ -166,12 +169,13 @@ class Admin_view(object):
     def add_teacher(self):
         '''添加讲师'''
         getattr(self,'see_teacher_list')()
-        teacher_name = str(input("\033[1;35m请输入讲师姓名:\033[0m").strip())
+
 
         while True:
+            teacher_name = str(input("\033[1;35m请输入讲师姓名:\033[0m").strip())
             if teacher_name in self.school_obj.school_teacher:
                 print('讲师已存在,请重新输入')
-                continue
+                break
             else:
                 teacher_passwd = str(input("\033[1;35m请输入讲师登录密码:\033[0m").strip())
                 teacher_gender = str(input("\033[1;35m请输入讲师性别:\033[0m").strip())
@@ -188,14 +192,105 @@ class Admin_view(object):
                     self.school_obj.add_schoolteacher(teacher_name, teacher_passwd, teacher_gender, teacher_age,
                                                       teacher_salary, teacher_phonenumber)
                     print('\033[1;35m 添加讲师{}成功\033[0m'.format(teacher_name))
+                    break
                 elif your_input == "q":
                     getattr("exit_program")()
                 else:
                     print("\033[1;35m您的输入有误 \033[0m")
+                    break
+
+    def add_grade(self):
+        '''添加班级'''
+
+        while True:
+            grade_name = str(input("\033[1;35m请输入班级姓名:\033[0m").strip())
+            if grade_name in self.school_obj.school_grade:
+                print('班级已存在,请重新输入')
+                break
+            else:
+                grade_teacher = str(input("\033[1;35m请输入班级讲师姓名:\033[0m").strip())
+                grade_course = str(input("\033[1;35m请输入班级课程:\033[0m").strip())
+                print('\033[1;35m你输入的信息如下: \n 班级: {}\n班级讲师: {}\n班级课程: {}\n\033[0m'.format(grade_name,
+                                                                                                      grade_teacher,
+                                                                                                      grade_course))
+                your_input = str(input("\033[1;35m确认请输入yes|YES，重新输入请输入 r,退出请输入 q。 :\033[0m").strip())
+                if your_input == "yes" or "YES":
+                    self.school_obj.add_schoolgrade(grade_name, grade_teacher, grade_course)
+                    print('\033[1;35m 添加班级{}成功\033[0m'.format(grade_name))
+                    break
+                elif your_input == "q":
+                    getattr("exit_program")()
+                else:
+                    print("\033[1;35m您的输入有误 \033[0m")
+                    break
+
+    def add_course(self):
+        '''添加课程'''
+
+        while True:
+            course_name = str(input("\033[1;35m请输入课程姓名:\033[0m").strip())
+            if course_name in self.school_obj.school_course:
+                print('课程已存在,请重新输入')
+                break
+            else:
+                course_cycle = str(input("\033[1;35m请输入课程周期:\033[0m").strip())
+                course_price = str(input("\033[1;35m请输入学费课程:\033[0m").strip())
+                print('\033[1;35m你输入的信息如下: \n 课程: {}\n课程周期: {}\n课程学费: {}\n\033[0m'.format(course_name,
+                                                                                                      course_cycle,
+                                                                                                      course_price))
+                your_input = str(input("\033[1;35m确认请输入yes|YES，重新输入请输入 r,退出请输入 q。 :\033[0m").strip())
+                if your_input == "yes" or "YES":
+                    self.school_obj.add_schoolcourse(course_name, course_cycle, course_price)
+                    print('\033[1;35m 添加课程{}成功\033[0m'.format(course_name))
+                    break
+                elif your_input == "q":
+                    getattr("exit_program")()
+                else:
+                    print("\033[1;35m您的输入有误 \033[0m")
+                    break
+
+    def see_teacher_list(self):
+        '''查询讲师列表'''
+        for index,taacher in enumerate(self.school_obj.school_teacher):
+            print('讲师编号：{}\t讲师姓名：{}'.format(index + 1,taacher))
+    def see_grade_list(self):
+        '''查询班级列表'''
+        for index,grade in enumerate(self.school_obj.school_grade):
+            print('班级编号：{}\t班级：{}'.format(index + 1,grade))
+
+    def see_course_list(self):
+        '''查询讲师列表'''
+        for index,course in enumerate(self.school_obj.school_course):
+            print('课程编号：{}\t课程：{}'.format(index + 1,course))
 
 
-
-
+    def del_teacher(self):
+        '''删除讲师'''
+        getattr(self,'see_teacher_list')()
+        teacher_name = str(input("\033[1;35m请输入讲师姓名:\033[0m").strip())
+        if teacher_name in self.school_obj.school_teacher:
+            self.school_obj.school_teacher.pop(teacher_name)
+            print('删除讲师：{}成功'.format(teacher_name))
+        else:
+            print('查无此人')
+    def del_grade(self):
+        '''删除班级'''
+        getattr(self,'see_grade_list')()
+        grade_name = str(input("\033[1;35m请输入班级名称:\033[0m").strip())
+        if grade_name in self.school_obj.school_grade:
+            self.school_obj.school_teacher.pop(grade_name)
+            print('删除班级：{}成功'.format(grade_name))
+        else:
+            print('没有这个班级')
+    def del_course(self):
+        '''删除课程'''
+        getattr(self,'see_course_list')()
+        course_name = str(input("\033[1;35m请输入课程名称:\033[0m").strip())
+        if course_name in self.school_obj.school_course:
+            self.school_obj.school_teacher.pop(course_name)
+            print('删除课程：{}成功'.format(course_name))
+        else:
+            print('没有这个课程')
 
 
 
