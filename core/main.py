@@ -36,9 +36,11 @@ class Mainprogram(object):
                 print('退出~')
                 quit()
             elif yourinput == '1':
-                pass
+                student = Student_view()
+                student.run_student_view()
             elif yourinput == '2':
-                pass
+                teacher = Teacher_view()
+                teacher.run_teacher_view()
             elif yourinput == '3':
                 admin = Admin_view()
                 admin.run_admin_view()
@@ -95,6 +97,7 @@ class Admin_view(object):
         else:
             school_addr = str(input("\033[1;35m请输入学校地址: \033[0m").strip())
             self.schooldata[school_name] = School(school_name,school_addr)
+            #实例化学校，写到文件中类似这样，学校字符串（对象）：学校实例
             print('学校创建成功！')
 
     def school_list(self):
@@ -123,9 +126,9 @@ class Admin_view(object):
         while True:
             if your_choiseschool in self.schooldata:
                 self.school_obj = self.schooldata[your_choiseschool]
-                #schooldata[your_choiseschool]是学校的实例
+                #schooldata[your_choiseschool]是学校的实例，school_obj是学校的实例化对象
                 # 并且也是一个变量，指向内存学校的内存空间
-                #self.school_obj = self.schooldata[your_choiseschool]相当于把学校实例当成key，加入个学校-老师字典
+                #self.school_obj = self.schooldata[your_choiseschool]相当于把学校实例当成key，学校-老师字典整体是个value
                 manage_school_page = '''
 
                                 1:添加讲师
@@ -191,6 +194,8 @@ class Admin_view(object):
                 if your_input == "yes" or "YES":
                     self.school_obj.add_schoolteacher(teacher_name, teacher_passwd, teacher_gender, teacher_age,
                                                       teacher_salary, teacher_phonenumber)
+                    #这一步做了，add_schoolteacher实例化老师对象，生成一个讲师名称：讲师实例的字典key-value
+                    #通过school_obj，意思是与学校建立了关系{'学校实例':{'老师':'老师实例'}}类似这样
                     print('\033[1;35m 添加讲师{}成功\033[0m'.format(teacher_name))
                     break
                 elif your_input == "q":
@@ -295,11 +300,214 @@ class Admin_view(object):
 
 
 class Student_view(object):
-    pass
+    '''学生视图，学生注册，选择学校，选择班级'''
+
+    def __init__(self):
+        '''初始化时打开文件，后续可以实例化管理视图类来打开数据文件，操作数据'''
+        self.admin_view_obj = Admin_view()
+
+    def __del__(self):
+        '''无调用实例时关闭文件操作'''
+        self.admin_view_obj.schooldata.close()
+
+    def run_student_view(self):
+        '''学生视图主程序入口'''
+        self.admin_view_obj.school_list()
+        self.your_choiceschool = str(input("\033[1;35m 请输入你要进入的学校：\033[0m").strip())
+        self.your_choiseschool_obj = self.admin_view_obj.schooldata[self.your_choiceschool]
+        #self.admin_view_obj.schooldata[self.your_choiceschool]表示学校实例，同时也是key
+        #把学校实例赋值给一个变量，使他可以使用学校key的value
+        for i in self.your_choiseschool_obj.school_grade:
+            grade_obj = self.your_choiseschool_obj.school_grade[i]
+            print('''\033[1;35m
+                        班级名称: {}
+                        班级所开课程: {}
+                        班级讲师: {}
+                        \n\n\033[0m'''.format(grade_obj.grade_name,
+                                              grade_obj.grade_course,
+                                              grade_obj.grade_teacher))
+        self.your_choisegrade = str(input("\033[1;35m请输入你要选择的班级: \033[0m").strip())
+
+        self.grade_obj = self.your_choiseschool_obj.school_grade[self.your_choisegrade]
+        #self.your_choiseschool_obj.school_grade[self.your_choisegrade]通过学校实例找到对应学校-班级字典
+        #再通过班级找对应value，赋值给一个变量，value也是一个实例，是班级的实例，相当于实例化班级
+        print('\033[1;35m欢迎来到 {}学校 \033[0m'.format(self.your_choiceschool))
+        while True:
+            student_view_page = '''
+                    1:学员注册
+                    2:学员缴费
+                    3:学员注销
+                    r:返回上一级
+                    q:退出登录
+                    '''
+            student_view_page_data = {
+                '1': 'student_registered',
+                '2': 'studen_paycost',
+                '3': 'student_del',
+            }
+            print('\033[1;35m\n\n{}\n\n\033[0m'.format(student_view_page))
+            your_input = str(input("\033[1;35m请选择：  \033[0m").strip())
+            if your_input == "r":
+                self.admin_view_obj.schooldata.close()
+                #这里的返回上一级，也相当于跳出学生视图，不在这个类中，文件不能一直是打开状态
+                break
+            elif your_input == "q":
+                quit()
+            if hasattr(self, student_view_page_data[your_input]):
+                getattr(self, student_view_page_data[your_input])()
+            else:
+                print("\033[1;35m您的输入有误 !\033[0m")
+
+    def student_registered(self):
+        '''学生注册'''
+        student_name = str(input("\033[1;35m请输入你的姓名 \033[0m").strip())
+        if student_name in self.grade_obj.grade_student:
+            #班级对象grade_obj，实例化班级类的时候，里面有班级和学生的对应字典
+
+            print("\033[1;35m该学生已经存在。 \033[0m")
+        else:
+            student_passwd = str(input("\033[1;35m请设置你的用户密码: \033[0m").strip())
+            student_gender = str(input("\033[1;35m请设置你的性别: \033[0m").strip())
+            student_age = str(input("\033[1;35m请输入你的年龄: \033[0m").strip())
+            self.grade_obj.add_grade_student(student_name, student_passwd, student_gender, student_age)
+            #创建学生实例的时候，同时与班级建立对应关系
+            #这里是最绕的，学校-班级-学生的对应关系是如何建立，还有数据的结构：
+            #1.实例化学校时，实际上创建了学校，并以key-value形式写到文件db中，学校：学校实例 存储
+            #2.学校实例中有三个方法，可以创建班级、课程、讲师，并保存到对应字典，以对象：实例 方式存储
+            #3.创建班级、课程、讲师时文件还是打开和写入状态，这时存在对应关系学校-班级等，学校：{班级：班级实例}方式存储
+            #4.学生的时候可以通过班级类创建，保存班级-学生的对应关系，大概的关系如下：
+            # {'学校名': 学校实例':{
+            #             '班级名'：{（班级实例）:{'学生': 学生实例}
+            # }
+            # {'讲师': 讲师实例}
+            # {'课程': 课程实例}
+            # }
+
+            print('''\033[1;35m\n恭喜添加{}用户成功.\n\n
+                    您所在的班级是: {}
+                    您报名的课程是: {}
+                    您的班级讲师是: {}\033[0m'''.format(student_name, self.your_choisegrade, self.grade_obj.grade_course,
+                                                 self.grade_obj.grade_teacher))
+
+    def student_del(self):
+        '''学员注销'''
+        print("学员注销")
+        input_name = str(input("\033[1;35m请输入注销用户的用户名: \033[0m").strip())
+        input_passwd = str(input("\033[1;35m请输入注销用户的用户密码: \033[0m").strip())
+        if input_name in self.grade_obj.grade_student and input_passwd == self.student_obj.student_passwd:
+            self.grade_obj.grade_student.pop[input_name]
+            print("\033[1;35m学生{}删除成功 \033[0m".format(input_name))
+        else:
+            print("\033[1;35m您输入的用户不存在或者密码错误. \033[0m".format(input_name))
+
+    def studen_paycost(self):
+        '''学员缴费'''
+        input_name = str(input("\033[1;35m请输入注销用户的用户名: \033[0m").strip())
+        input_passwd = str(input("\033[1;35m请输入注销用户的用户密码: \033[0m").strip())
+        self.student_obj = self.grade_obj.grade_student[input_name]
+        if input_name in self.grade_obj.grade_student and input_passwd == self.student_obj.student_passwd:
+            course_price = self.your_choiseschool_obj.school_course[self.grade_obj.grade_course].course_price
+            #1.self.your_choiseschool_obj是学校实例
+            #2.学校实例访问学校-课程字典，需要拿到对应的课程实例
+            #3.self.grade_obj实际是self.your_choiseschool_obj.school_grade[班级]，也就是班级实例
+            #4.self.grade_obj.grade_course也就是班级课程字段，拿到课程实例
+            #5.课程类中有课程价格course_price
+            print("\033[1;35m你报名的课程是{},需要支付{}元 \033[0m".format(self.grade_obj.grade_course,course_price))
+            your_input6 = str(input("\033[1;35m确认支付请输入yes|YES，输入其他视为放弃支付。 \033[0m").strip())
+            if your_input6 == "yes" or "YES":
+                self.student_obj.paycost_status = True
+                print("\033[1;34m 恭喜你 ，支付完成，你已经缴费成功\033[0m")
+            else:
+                print("\033[1;34m 您的输入有误。\033[0m")
+        else:
+            print("\033[1;34m 您的输入有误。\033[0m")
+
+
+
+
+
 
 
 class Teacher_view(object):
-    pass
+    '''讲师视图，查看学生成绩，查看个人信息，查看班级学生列表'''
+
+    def __init__(self):
+        self.admin_view_obj = Admin_view()
+
+    def __del__(self):
+        self.admin_view_obj.schooldata.close()
+    def run_teacher_view(self):
+        '''讲师视图主程序入口'''
+        self.admin_view_obj.school_list()
+        self.your_choiseschool = input("\033[1;35m 请输入你要进入的学校：\033[0m").strip()
+        if self.your_choiseschool in self.admin_view_obj.schooldata:
+            self.your_choiseschool_obj = self.admin_view_obj.schooldata[self.your_choiseschool]
+            #实例化学校
+            teacher_name = str(input("\033[1;35m 请输入你的讲师姓名：\033[0m").strip())
+            teacher_passwd = str(input("\033[1;35m 请输入你的登录密码：\033[0m").strip())
+            if teacher_name in self.your_choiseschool_obj.school_teacher and teacher_passwd ==\
+                    self.your_choiseschool_obj.school_teacher[teacher_name].teacher_passwd:
+                self.teacher_obj = self.your_choiseschool_obj.school_teacher[teacher_name]
+                # 实例化讲师对象,通过学校实例找到学校-讲师字典，拿到对应讲师实例
+                print("\033[1;35m{}讲师,欢迎你\033[0m".format(teacher_name))
+                while True:
+                    teacher_page = '''
+                                        1.查看个人信息
+                                        2.查看班级学生名单
+                                        r.返回上一级
+                                        q.退出登录
+                                    '''
+                    teacher_page_data = {
+                        '1': 'teacher_info',
+                        '2': 'student_list',
+                    }
+
+                    print("\033[1;35m{}\033[0m".format(teacher_page))
+                    your_input = str(input("\033[1;35m 请输入你的选择：\033[0m").strip())
+                    if your_input == "r":
+                        self.admin_view_obj.schooldata.close()
+                        break
+                    if your_input == "q":
+                        self.admin_view_obj.exit_program()
+                    if hasattr(self, teacher_page_data[your_input]):
+                        getattr(self, teacher_page_data[your_input])()
+                    else:
+                        print("\033[1;35m您的输入有误。\033[0m")
+            else:
+                print("\033[1;35m您的输的账户不存在或者密码错误。\033[0m")
+        else:
+            print("\033[1;35m您的输入有误。\033[0m")
+
+    def teacher_info(self):
+        '''讲师个人信息'''
+        print('''\033[1;35m\n讲师个人信息如下:  
+        讲师名称：{}
+        讲师性别：{}
+        讲师年龄：{}
+        讲师工资：{}
+        讲师电话号码：{}
+        \033[0m'''.format(self.teacher_obj.teacher_name, self.teacher_obj.teacher_gender, self.teacher_obj.teacher_age,
+                          self.teacher_obj.teacher_salary, self.teacher_obj.teacher_phonenumber))
+
+    def student_list(self):
+        '''学生列表'''
+        print('当前班级如下：')
+        self.grade_obj = self.your_choiseschool_obj.school_grade
+        for i in self.grade_obj:
+            print("\033[1;34m{}\033[0m".format(i))
+        your_input = str(input("\033[1;35m请输入你要查看的班级名: \033[0m").strip())
+        if your_input in self.grade_obj:
+            self.grade_obj1 = self.grade_obj[your_input]
+            print("\033[1;34m\n\n{}班级的学生列表如下: \033[0m".format(your_input))
+            for j in self.grade_obj1.grade_student:
+                student_obj = self.grade_obj1.grade_student[j]
+                print('''\033[1;35m姓名: {}  性别: {}  年龄: {}  缴费状态: {}\033[0m'''.format(student_obj.student_name,
+                                                                                     student_obj.student_gender,
+                                                                                     student_obj.student_age,
+                                                                                     student_obj.paycost_status))
+        else:
+            print("\033[1;35m您的输入有误。\033[0m")
+
 
 
 
